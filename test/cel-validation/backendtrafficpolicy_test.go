@@ -35,6 +35,8 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 
 	sectionName := gwapiv1a2.SectionName("foo")
 
+	rateLimitTypeGlobal := egv1a1.GlobalRateLimitType
+
 	cases := []struct {
 		desc         string
 		mutate       func(btp *egv1a1.BackendTrafficPolicy)
@@ -1138,7 +1140,7 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 						},
 					},
 					RateLimit: &egv1a1.RateLimitSpec{
-						Type: egv1a1.GlobalRateLimitType,
+						Type: &rateLimitTypeGlobal,
 						Global: &egv1a1.GlobalRateLimit{
 							Rules: rules,
 						},
@@ -1172,7 +1174,7 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 						},
 					},
 					RateLimit: &egv1a1.RateLimitSpec{
-						Type: egv1a1.GlobalRateLimitType,
+						Type: &rateLimitTypeGlobal,
 						Global: &egv1a1.GlobalRateLimit{
 							Rules: rules,
 						},
@@ -1794,7 +1796,7 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 						},
 					},
 					RateLimit: &egv1a1.RateLimitSpec{
-						Type: egv1a1.GlobalRateLimitType,
+						Type: &rateLimitTypeGlobal,
 						Global: &egv1a1.GlobalRateLimit{
 							Rules: rules,
 						},
@@ -1817,7 +1819,7 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 						},
 					},
 					RateLimit: &egv1a1.RateLimitSpec{
-						Type: egv1a1.GlobalRateLimitType,
+						Type: &rateLimitTypeGlobal,
 						Global: &egv1a1.GlobalRateLimit{
 							Rules: []egv1a1.RateLimitRule{
 								{
@@ -1853,7 +1855,7 @@ func TestBackendTrafficPolicyTarget(t *testing.T) {
 						},
 					},
 					RateLimit: &egv1a1.RateLimitSpec{
-						Type: egv1a1.GlobalRateLimitType,
+						Type: &rateLimitTypeGlobal,
 						Local: &egv1a1.LocalRateLimit{
 							Rules: []egv1a1.RateLimitRule{
 								{
