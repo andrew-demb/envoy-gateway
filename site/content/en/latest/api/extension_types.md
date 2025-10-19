@@ -4251,7 +4251,7 @@ _Appears in:_
 
 | Field | Type | Required | Default | Description |
 | ---   | ---  | ---      | ---     | ---         |
-| `type` | _[RateLimitType](#ratelimittype)_ |  true  |  | Type decides the scope for the RateLimits.<br />Valid RateLimitType values are "Global" or "Local". |
+| `type` | _[RateLimitType](#ratelimittype)_ |  false  |  | Type decides the scope for the RateLimits.<br />Valid RateLimitType values are "Global" or "Local".<br />Deprecated: omit it, just specify needed local/global configuration instead |
 | `global` | _[GlobalRateLimit](#globalratelimit)_ |  false  |  | Global defines global rate limit configuration. |
 | `local` | _[LocalRateLimit](#localratelimit)_ |  false  |  | Local defines local rate limit configuration. |
 

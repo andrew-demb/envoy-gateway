@@ -752,17 +752,52 @@ func (t *Translator) translateBackendTrafficPolicyForGateway(
 }
 
 func (t *Translator) buildRateLimit(policy *egv1a1.BackendTrafficPolicy) (*ir.RateLimit, error) {
-	switch policy.Spec.RateLimit.Type {
-	case egv1a1.GlobalRateLimitType:
-		return t.buildGlobalRateLimit(policy)
-	case egv1a1.LocalRateLimitType:
-		return t.buildLocalRateLimit(policy)
+	if policy.Spec.RateLimit.Global == nil && policy.Spec.RateLimit.Local == nil {
+		return nil, fmt.Errorf("passed empty configuration for rateLimit")
 	}
 
-	return nil, fmt.Errorf("invalid rateLimit type: %s", policy.Spec.RateLimit.Type)
+	rateLimit := &ir.RateLimit{}
+
+	if policy.Spec.RateLimit.Type == nil {
+		global, err := t.buildGlobalRateLimit(policy)
+		if err != nil {
+			return nil, err
+		}
+
+		local, err := t.buildLocalRateLimit(policy)
+		if err != nil {
+			return nil, err
+		}
+
+		rateLimit.Global = global
+		rateLimit.Local = local
+
+		return rateLimit, nil
+	}
+
+	switch *policy.Spec.RateLimit.Type {
+	case egv1a1.GlobalRateLimitType:
+		global, err := t.buildGlobalRateLimit(policy)
+		if err != nil {
+			return nil, err
+		}
+
+		rateLimit.Global = global
+	case egv1a1.LocalRateLimitType:
+		local, err := t.buildLocalRateLimit(policy)
+		if err != nil {
+			return nil, err
+		}
+
+		rateLimit.Local = local
+	default:
+		return nil, fmt.Errorf("invalid rateLimit type: %s", *policy.Spec.RateLimit.Type)
+	}
+
+	return rateLimit, nil
 }
 
-func (t *Translator) buildLocalRateLimit(policy *egv1a1.BackendTrafficPolicy) (*ir.RateLimit, error) {
+func (t *Translator) buildLocalRateLimit(policy *egv1a1.BackendTrafficPolicy) (*ir.LocalRateLimit, error) {
 	if policy.Spec.RateLimit.Local == nil {
 		return nil, fmt.Errorf("local configuration empty for rateLimit")
 	}
@@ -823,17 +858,13 @@ func (t *Translator) buildLocalRateLimit(policy *egv1a1.BackendTrafficPolicy) (*
 		irRules = append(irRules, irRule)
 	}
 
-	rateLimit := &ir.RateLimit{
-		Local: &ir.LocalRateLimit{
-			Default: *defaultLimit,
-			Rules:   irRules,
-		},
-	}
-
-	return rateLimit, nil
+	return &ir.LocalRateLimit{
+		Default: *defaultLimit,
+		Rules:   irRules,
+	}, nil
 }
 
-func (t *Translator) buildGlobalRateLimit(policy *egv1a1.BackendTrafficPolicy) (*ir.RateLimit, error) {
+func (t *Translator) buildGlobalRateLimit(policy *egv1a1.BackendTrafficPolicy) (*ir.GlobalRateLimit, error) {
 	if policy.Spec.RateLimit.Global == nil {
 		return nil, fmt.Errorf("global configuration empty for rateLimit")
 	}
@@ -842,13 +873,11 @@ func (t *Translator) buildGlobalRateLimit(policy *egv1a1.BackendTrafficPolicy) (
 	}
 
 	global := policy.Spec.RateLimit.Global
-	rateLimit := &ir.RateLimit{
-		Global: &ir.GlobalRateLimit{
-			Rules: make([]*ir.RateLimitRule, len(global.Rules)),
-		},
+	globalRateLimit := &ir.GlobalRateLimit{
+		Rules: make([]*ir.RateLimitRule, len(global.Rules)),
 	}
 
-	irRules := rateLimit.Global.Rules
+	irRules := globalRateLimit.Rules
 	var err error
 	for i, rule := range global.Rules {
 		irRules[i], err = buildRateLimitRule(rule)
@@ -859,7 +888,7 @@ func (t *Translator) buildGlobalRateLimit(policy *egv1a1.BackendTrafficPolicy) (
 		irRules[i].Name = irRuleName(policy.Namespace, policy.Name, i)
 	}
 
-	return rateLimit, nil
+	return globalRateLimit, nil
 }
 
 func buildRateLimitRule(rule egv1a1.RateLimitRule) (*ir.RateLimitRule, error) {
